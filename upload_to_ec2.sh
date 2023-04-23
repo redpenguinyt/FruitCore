@@ -1,0 +1,1 @@
+rsync -azvv --progress -e "ssh -i fruitcore.pem" bot.py ubuntu@ec2-18-168-150-39.eu-west-2.compute.amazonaws.com:~/

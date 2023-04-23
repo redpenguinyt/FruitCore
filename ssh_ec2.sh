@@ -1,0 +1,1 @@
+ssh -i "fruitcore.pem" ubuntu@ec2-18-168-150-39.eu-west-2.compute.amazonaws.com
