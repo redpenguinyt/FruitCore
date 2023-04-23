@@ -40,55 +40,53 @@ async def ping(ctx: discord.Interaction):
 
 @bot.tree.command()
 async def speech_bubble(ctx: discord.Interaction, image_link: str):
-    await ctx.response.defer()
+	await ctx.response.defer()
 
-    try:
-        r = requests.get(image_link)
+	try:
+		r = requests.get(image_link)
 
-        print(r.status_code)
+		print(r.status_code)
 
-        file = open("pre_bubbled.png", "wb")
-        file.write(r.content)
-        file.close()
+		with open("pre_bubbled.png", "wb") as file:
+			file.write(r.content)
+		pre_bubbled = Image.open("pre_bubbled.png")
+		speech_bubble = Image.open("speech_bubble.png")
 
-        pre_bubbled = Image.open("pre_bubbled.png")
-        speech_bubble = Image.open("speech_bubble.png")
+		image_width = pre_bubbled.size[0]
 
-        image_width = pre_bubbled.size[0]
+		speech_bubble = speech_bubble.resize((image_width, int(image_width*0.32)))
 
-        speech_bubble = speech_bubble.resize((image_width, int(image_width*0.32)))
+		pre_bubbled.paste(speech_bubble, (0, 0), speech_bubble)
 
-        pre_bubbled.paste(speech_bubble, (0, 0), speech_bubble)
+		bubbled = pre_bubbled.convert('RGBA')
+		datas = bubbled.getdata()
 
-        bubbled = pre_bubbled.convert('RGBA')
-        datas = bubbled.getdata()
+		newData = []
+		for item in datas:
+		    if item[0] == 49 and item[1] == 51 and item[2] == 56: # detect discord colour
+		        newData.append((255, 255, 255, 0)) # transparent pixel
+		    else:
+		        newData.append(item) # unedited pixel
+		bubbled.putdata(newData)
+		bubbled.save('bubbled.png', "PNG")
 
-        newData = []
-        for item in datas:
-            if item[0] == 49 and item[1] == 51 and item[2] == 56: # detect discord colour
-                newData.append((255, 255, 255, 0)) # transparent pixel
-            else:
-                newData.append(item) # unedited pixel
-        bubbled.putdata(newData)
-        bubbled.save('bubbled.png', "PNG")
+		os.system("ffmpeg -i bubbled.png -vf alettegen -y palette.png")
+		os.system('ffmpeg -v warning -i bubbled.png -i palette.png  -lavfi "paletteuse,setpts=6*PTS" -y bubbled.gif')
 
-        os.system("ffmpeg -i bubbled.png -vf alettegen -y palette.png")
-        os.system('ffmpeg -v warning -i bubbled.png -i palette.png  -lavfi "paletteuse,setpts=6*PTS" -y bubbled.gif')
+		pre_bubbled.close()
+		speech_bubble.close()
 
-        pre_bubbled.close()
-        speech_bubble.close()
+		await ctx.followup.send(file=discord.File("bubbled.gif", filename="bubbled.gif"))
+		print("> Success!\n----------------------\n")
 
-        await ctx.followup.send(file=discord.File("bubbled.gif", filename="bubbled.gif"))
-        print("> Success!\n----------------------\n")
+	except Exception as e:
+	    print(f"> Error: {e}\n----------------------\n")
+	    await ctx.followup.send(f"Error: {e}")
 
-    except Exception as e:
-        print(f"> Error: {e}\n----------------------\n")
-        await ctx.followup.send(f"Error: {e}")
-
-    os.system("rm pre_bubbled.png")
-    os.system("rm bubbled.png")
-    os.system("rm palette.png")
-    os.system("rm bubbled.gif")
+	os.system("rm pre_bubbled.png")
+	os.system("rm bubbled.png")
+	os.system("rm palette.png")
+	os.system("rm bubbled.gif")
 
 @bot.tree.command()
 async def list_fruits(ctx: discord.Interaction, fruit: str, image_count: int=5):
@@ -102,27 +100,27 @@ async def list_fruits(ctx: discord.Interaction, fruit: str, image_count: int=5):
 
 @bot.tree.command()
 async def fruitcore(ctx: discord.Interaction, image_link: str, song_link: str, timestamp_from: str="0:00", timestamp_to: str="", bitrate: str="96k"):
-    await ctx.response.defer()
+	await ctx.response.defer()
 
-    print("> Generating fruitstep")
-    print(f"> Image: {image_link}")
-    print(f"> Song: {song_link}")
-    print(f"> Timestamps: {timestamp_from}-{timestamp_to}")
-    print(f"> Bitrate: {bitrate}")
+	print("> Generating fruitstep")
+	print(f"> Image: {image_link}")
+	print(f"> Song: {song_link}")
+	print(f"> Timestamps: {timestamp_from}-{timestamp_to}")
+	print(f"> Bitrate: {bitrate}")
 
-    # Baby-proofing
+	# Baby-proofing
 
-    error = generate_fruitcore() # generates the fruitcore video, creating a result.mp4 file
+	error = generate_fruitcore() # generates the fruitcore video, creating a result.mp4 file
 
-    if error == None:
-        print("> Success!")
-        await ctx.followup.send(file=discord.File("result.mp4", filename="result.mp4"))
-    else:
-        print(f"> Error: {error}")
-        await ctx.followup.send(f"Error: {error}")
+	if error is None:
+		print("> Success!")
+		await ctx.followup.send(file=discord.File("result.mp4", filename="result.mp4"))
+	else:
+		print(f"> Error: {error}")
+		await ctx.followup.send(f"Error: {error}")
 
-    print("\n----------------------\n")
-    os.system("rm result.mp4")
+	print("\n----------------------\n")
+	os.system("rm result.mp4")
 
 
 if __name__ == "__main__":
