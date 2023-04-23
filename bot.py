@@ -44,12 +44,10 @@ async def speech_bubble(ctx: discord.Interaction, image_link: str):
 
     try:
         r = requests.get(image_link)
-
         print(r.status_code)
 
-        file = open("pre_bubbled.png", "wb")
-        file.write(r.content)
-        file.close()
+        with open("pre_bubbled.png", "wb") as file:
+            file.write(r.content)
 
         pre_bubbled = Image.open("pre_bubbled.png")
         speech_bubble = Image.open("speech_bubble.png")
@@ -79,11 +77,12 @@ async def speech_bubble(ctx: discord.Interaction, image_link: str):
         speech_bubble.close()
 
         await ctx.followup.send(file=discord.File("bubbled.gif", filename="bubbled.gif"))
-        print("> Success!\n----------------------\n")
+        print("> Success!")
 
     except Exception as e:
-        print(f"> Error: {e}\n----------------------\n")
+        print(f"> Error: {e}")
         await ctx.followup.send(f"Error: {e}")
+    print("\n----------------------\n")
 
     os.system("rm pre_bubbled.png")
     os.system("rm bubbled.png")
@@ -114,7 +113,7 @@ async def fruitcore(ctx: discord.Interaction, image_link: str, song_link: str, t
 
     error = generate_fruitcore() # generates the fruitcore video, creating a result.mp4 file
 
-    if error == None:
+    if error is None:
         print("> Success!")
         await ctx.followup.send(file=discord.File("result.mp4", filename="result.mp4"))
     else:

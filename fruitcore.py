@@ -3,19 +3,21 @@ import datetime, subprocess, os, requests, yt_dlp
 UNSPLASH_CLIENT_ID = "cKakzKM1cx44BUYBnEIrrgN_gnGqt81UcE7GstJEils"
 
 def parse_timestamp(ts):
-    formats = [
-        "%M:%S", # MM:SS
-        "%M:%S.%f", # MM:SS.mm
-        "%S", # SS
-        "%S.%f" # SS.mm
-    ]
-    for f in formats:
-        try:
-            timestamp = ( datetime.datetime.strptime(ts, f).replace(year=1970) - datetime.datetime(1970,1,1) ).total_seconds()
-            return timestamp
-        except ValueError:
-            pass
-    return None
+	formats = [
+		"%M:%S", # MM:SS
+		"%M:%S.%f", # MM:SS.mm
+		"%S", # SS
+		"%S.%f" # SS.mm
+	]
+	for f in formats:
+		try:
+			return (
+				datetime.datetime.strptime(ts, f).replace(year=1970)
+				- datetime.datetime(1970, 1, 1)
+			).total_seconds()
+		except ValueError:
+			pass
+	return None
 
 def get_stock_images(fruit, image_count):
 	r = requests.get(f"https://api.unsplash.com/search/photos?query={fruit}&per_page={image_count}&orientation=landscape&page=1&client_id={UNSPLASH_CLIENT_ID}").json()
@@ -24,9 +26,7 @@ def get_stock_images(fruit, image_count):
 
 	print(f'> Recieved {len(r["results"])} images')
 
-	samples = [el["urls"]["regular"].split('?')[0] for el in r["results"]]
-
-	return samples
+	return [el["urls"]["regular"].split('?')[0] for el in r["results"]]
 
 def generate_fruitcore(image_link, song_link, timestamp_from, timestamp_to, bitrate):
 	bitrate = bitrate.lower().replace("bps","")
@@ -34,9 +34,8 @@ def generate_fruitcore(image_link, song_link, timestamp_from, timestamp_to, bitr
 	try:
 		r = requests.get(image_link)
 		print(r.status_code)
-		file = open("fruit.png", "wb")
-		file.write(r.content)
-		file.close()
+		with open("fruit.png", "wb") as file:
+			file.write(r.content)
 
 		# Downloading and trimming audio
 
@@ -58,7 +57,7 @@ def generate_fruitcore(image_link, song_link, timestamp_from, timestamp_to, bitr
 			os.system(f"ffmpeg -ss {from_time} -i download.mp3 -t {to_time} -y trimmed_audio.mp3")
 		else:
 			to_time = None
-			os.system(f"ffmpeg -i download.mp3 -y trimmed_audio.mp3")
+			os.system("ffmpeg -i download.mp3 -y trimmed_audio.mp3")
 
 		# Combine image and audio
 
