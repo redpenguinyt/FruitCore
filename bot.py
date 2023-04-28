@@ -13,6 +13,8 @@ APPLICATION_ID = int(os.getenv('DISCORD_APP_ID'))
 TOKEN = os.getenv('DISCORD_TOKEN')
 TEST_GUILD = discord.Object(id=os.getenv('DISCORD_GUILD'))
 
+banned_ids = [1072889780171448480]
+
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
@@ -101,6 +103,9 @@ async def list_fruits(ctx: discord.Interaction, fruit: str, image_count: int=5):
 
 @bot.tree.command()
 async def fruitcore(ctx: discord.Interaction, image_link: str, song_link: str, timestamp_from: str="0:00", timestamp_to: str="", bitrate: str="96k"):
+    if ctx.user.id in banned_ids:
+        return await ctx.response.send_message("get banned lol")
+
     await ctx.response.defer()
 
     print("> Generating fruitstep")
